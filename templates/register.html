@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Register — GM Connected{% endblock %}
+{% block content %}
+<div class="auth-box">
+  <h1>🏒 GM Connected</h1>
+  <h2>Choose Your Team</h2>
+  <form method="POST">
+    <label>Username <input type="text" name="username" required autofocus></label>
+    <label>Password <input type="password" name="password" required></label>
+    <label>Team
+      <select name="team_id" required>
+        <option value="">— Select a team —</option>
+        {% for t in teams %}
+        <option value="{{ t.id }}">{{ t.city }} {{ t.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button type="submit" class="btn btn-primary">Create Account</button>
+  </form>
+  <p>Already have an account? <a href="{{ url_for('login') }}">Sign in →</a></p>
+</div>
+{% endblock %}

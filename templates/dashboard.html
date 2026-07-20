@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — GM Connected{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>{{ team.city }} {{ team.name }} — Dashboard</h1>
+  {% if season %}
+  <div class="season-badge">
+    {{ season.year }}-{{ (season.year+1)|string|slice(2) }} Season &middot;
+    Week {{ season.week }} &middot;
+    <span class="phase-badge phase-{{ season.phase }}">{{ season.phase|title }}</span>
+  </div>
+  {% endif %}
+</div>
+
+<div class="dashboard-grid">
+
+  <!-- Cap Space Card -->
+  {% if team %}
+  <div class="card">
+    <h2>Cap Space</h2>
+    <div class="cap-bar-wrap">
+      {% set pct = (team.cap_hit / season.cap_ceiling * 100)|round(1) if season else 0 %}
+      <div class="cap-bar" style="width:{{ [pct,100]|min }}%"></div>
+    </div>
+    <p class="cap-numbers">
+      <strong>${{ "{:,.0f}".format(team.cap_hit) }}</strong> used &nbsp;/&nbsp;
+      <strong>${{ "{:,.0f}".format(team.cap_space) }}</strong> remaining
+      <span class="cap-ceiling">(ceiling: ${{ "{:,.0f}".format(season.cap_ceiling) if season else "—" }})</span>
+    </p>
+    <p>Team OVR: <strong>{{ team.overall }}</strong></p>
+  </div>
+  {% endif %}
+
+  <!-- Ready Up Card -->
+  <div class="card">
+    <h2>Weekly Readiness</h2>
+    {% if readiness %}
+      <p class="ready-status ready">✅ You are ready for Week {{ season.week }}.</p>
+    {% else %}
+      <p class="ready-status not-ready">⏳ Not yet readied up this week.</p>
+      <form method="POST" action="{{ url_for('ready_up') }}">
+        <button type="submit" class="btn btn-primary">Ready Up for Week {{ season.week }}</button>
+      </form>
+    {% endif %}
+  </div>
+
+  <!-- Pending Trades Card -->
+  <div class="card">
+    <h2>Pending Trade Offers</h2>
+    {% if pending_trades %}
+      {% for t in pending_trades %}
+      <div class="trade-alert">
+        Trade offer from <strong>{{ t.proposing_team.name }}</strong>
+        <a href="{{ url_for('trades') }}" class="btn btn-sm">View</a>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="muted">No pending offers.</p>
+    {% endif %}
+  </div>
+
+  <!-- Recent Games Card -->
+  <div class="card card-wide">
+    <h2>Recent Results</h2>
+    {% if recent_games %}
+    <table class="data-table">
+      <thead><tr><th>Wk</th><th>Home</th><th></th><th>Away</th><th>OT/SO</th></tr></thead>
+      <tbody>
+      {% for g in recent_games %}
+      <tr class="{{ 'win' if (g.home_team_id == team.id and g.home_score > g.away_score) or (g.away_team_id == team.id and g.away_score > g.home_score) else 'loss' }}">
+        <td>{{ g.week }}</td>
+        <td>{{ g.home_team.abbrev }}</td>
+        <td class="score">{{ g.home_score }}–{{ g.away_score }}</td>
+        <td>{{ g.away_team.abbrev }}</td>
+        <td>{% if g.shootout %}SO{% elif g.overtime %}OT{% endif %}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="muted">No games played yet.</p>
+    {% endif %}
+    <a href="{{ url_for('schedule') }}" class="btn btn-sm">Full schedule →</a>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Admin — Commissioner{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>⚙ Commissioner Tools</h1>
+  {% if season %}
+  <p>Season {{ season.year }}-{{ (season.year+1)|string|slice(2) }} &middot; Week {{ season.week }} &middot; Phase: {{ season.phase }}</p>
+  {% endif %}
+</div>
+
+<div class="dashboard-grid">
+
+  <!-- Advance Week -->
+  <div class="card">
+    <h2>Advance Week</h2>
+    <p>Force-simulate the current week even if not all GMs have readied up.</p>
+    <form method="POST" action="{{ url_for('force_advance') }}"
+          onsubmit="return confirm('Force advance week {{ season.week if season }}?')">
+      <button type="submit" class="btn btn-primary">Force Advance Week</button>
+    </form>
+  </div>
+
+  <!-- Phase Control -->
+  <div class="card">
+    <h2>Set Season Phase</h2>
+    <form method="POST" action="{{ url_for('set_phase') }}">
+      <select name="phase">
+        {% for ph in ["preseason","regular","playoffs","draft","offseason"] %}
+        <option value="{{ ph }}" {{ "selected" if season and season.phase==ph }}>{{ ph|title }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn btn-primary">Set Phase</button>
+    </form>
+  </div>
+
+  <!-- Readiness Status -->
+  <div class="card card-wide">
+    <h2>GM Readiness — Week {{ season.week if season }}</h2>
+    <table class="data-table">
+      <thead><tr><th>Team</th><th>GM</th><th>Ready?</th><th>Time</th></tr></thead>
+      <tbody>
+      {% for u in users %}
+      {% if u.team_id %}
+      {% set r = readiness|selectattr('team_id','equalto',u.team_id)|first %}
+      <tr>
+        <td>{{ u.team.name if u.team else "—" }}</td>
+        <td>{{ u.username }}</td>
+        <td>{{ "✅ Ready" if r and r.is_ready else "⏳ Waiting" }}</td>
+        <td>{{ r.readied_at.strftime('%H:%M') if r and r.readied_at else "—" }}</td>
+      </tr>
+      {% endif %}
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Users -->
+  <div class="card">
+    <h2>Registered GMs ({{ users|length }})</h2>
+    <ul>
+      {% for u in users %}
+      <li>{{ u.username }} — {{ u.team.name if u.team else "No team" }} {{ "👑" if u.is_commissioner }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <!-- Teams -->
+  <div class="card">
+    <h2>All Teams ({{ teams|length }})</h2>
+    <table class="data-table">
+      <thead><tr><th>Team</th><th>Abbrev</th><th>Div</th><th>GM</th><th>Cap Space</th></tr></thead>
+      <tbody>
+      {% for t in teams %}
+      {% set gm = users|selectattr('team_id','equalto',t.id)|first %}
+      <tr>
+        <td>{{ t.city }} {{ t.name }}</td>
+        <td>{{ t.abbrev }}</td>
+        <td>{{ t.division }}</td>
+        <td>{{ gm.username if gm else "<span class='muted'>CPU</span>"|safe }}</td>
+        <td>${{ "{:,.0f}".format(t.cap_space) }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

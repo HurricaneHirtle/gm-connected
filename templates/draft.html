@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Draft Room — {{ draft_year }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>{{ draft_year }} NHL Entry Draft</h1>
+  {% if season and season.phase != "draft" %}
+  <div class="flash flash-warning">Draft is not currently open (phase: {{ season.phase }}).</div>
+  {% endif %}
+</div>
+
+<div class="draft-grid">
+  <!-- Your picks -->
+  <div class="card">
+    <h2>Your Picks</h2>
+    {% if my_picks %}
+    <ul class="pick-list">
+      {% for pk in my_picks %}
+      <li>{{ pk.label }}</li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">No picks remaining.</p>
+    {% endif %}
+  </div>
+
+  <!-- Available prospects -->
+  <div class="card card-wide">
+    <h2>Available Prospects ({{ available|length }})</h2>
+    {% if season and season.phase == "draft" %}
+    <form method="POST" action="{{ url_for('make_pick') }}">
+      <div class="draft-selectors">
+        <label>Prospect
+          <select name="prospect_id" required>
+            <option value="">— Select prospect —</option>
+            {% for p in available %}
+            <option value="{{ p.id }}">
+              {{ p.first_name }} {{ p.last_name }} — {{ p.position }} ({{ p.scout_grade }}) OVR {{ p.overall }}  {{ p.current_league }}
+            </option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Use pick
+          <select name="pick_id" required>
+            <option value="">— Select pick —</option>
+            {% for pk in my_picks %}
+            <option value="{{ pk.id }}">{{ pk.label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <button type="submit" class="btn btn-primary">Draft Player</button>
+      </div>
+    </form>
+    {% endif %}
+
+    <table class="data-table">
+      <thead>
+        <tr><th>Name</th><th>Pos</th><th>Age</th><th>Grade</th><th>Archetype</th><th>OVR</th><th>SKT</th><th>SHT</th><th>PAS</th><th>DEF</th><th>NAT</th><th>League</th></tr>
+      </thead>
+      <tbody>
+      {% for p in available %}
+      <tr>
+        <td>{{ p.first_name }} {{ p.last_name }}</td>
+        <td>{{ p.position }}</td>
+        <td>{{ p.age }}</td>
+        <td><span class="grade">{{ p.scout_grade }}</span></td>
+        <td>{{ p.archetype }}</td>
+        <td><strong>{{ p.overall }}</strong></td>
+        {% if p.position == "G" %}
+        <td colspan="4" class="muted center">REF {{ p.reflexes }} / POS {{ p.positioning }}</td>
+        {% else %}
+        <td>{{ p.skating }}</td><td>{{ p.shooting }}</td>
+        <td>{{ p.passing }}</td><td>{{ p.defense }}</td>
+        {% endif %}
+        <td>{{ p.nationality[:3]|upper }}</td>
+        <td>{{ p.current_league }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="12" class="muted center">No prospects available.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

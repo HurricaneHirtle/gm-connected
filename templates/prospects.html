@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Prospects{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Prospect Pool</h1>
+  <div class="year-tabs">
+    {% for y in range((season.year+1), (season.year+4)) %}
+    <a href="{{ url_for('prospects', year=y) }}" class="btn btn-sm {{ 'btn-primary' if y==year }}">{{ y }} Draft</a>
+    {% endfor %}
+  </div>
+</div>
+
+<h2>{{ year }} Draft — Eligible Prospects ({{ eligible|length }})</h2>
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Name</th><th>Pos</th><th>Age</th><th>Grade</th><th>Archetype</th>
+      <th>OVR</th><th>SKT</th><th>SHT</th><th>PAS</th><th>DEF</th><th>PHY</th><th>PKC</th><th>AWR</th>
+      <th>Team / League</th><th>NAT</th><th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for p in eligible %}
+  <tr>
+    <td>{{ p.first_name }} {{ p.last_name }}</td>
+    <td>{{ p.position }}</td>
+    <td>{{ p.age }}</td>
+    <td><span class="grade grade-{{ p.scout_grade|replace('+','plus')|replace('-','minus') }}">{{ p.scout_grade }}</span></td>
+    <td>{{ p.archetype }}</td>
+    <td><strong>{{ p.overall }}</strong></td>
+    {% if p.position == "G" %}
+    <td colspan="7" class="muted center">REF {{ p.reflexes }} / POS {{ p.positioning }} / RBC {{ p.rebound_ctrl }} / PKH {{ p.puck_handling }}</td>
+    {% else %}
+    <td>{{ p.skating }}</td><td>{{ p.shooting }}</td><td>{{ p.passing }}</td>
+    <td>{{ p.defense }}</td><td>{{ p.physical }}</td><td>{{ p.puck_control }}</td>
+    <td>{{ p.awareness }}</td>
+    {% endif %}
+    <td>{{ p.current_team }}<br><small>{{ p.current_league }}</small></td>
+    <td>{{ p.nationality[:3]|upper }}</td>
+    <td>
+      {% if p.nhl_team_id %}
+        Drafted by {{ p.nhl_team.abbrev }}
+      {% else %}
+        Available
+      {% endif %}
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="16" class="muted center">No eligible prospects for {{ year }}.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% if future %}
+<h2>Future Prospects (next 3 seasons, top 50 by age)</h2>
+<table class="data-table">
+  <thead>
+    <tr><th>Name</th><th>Pos</th><th>Age</th><th>Draft Yr</th><th>Grade</th><th>OVR</th><th>Team / League</th><th>NAT</th></tr>
+  </thead>
+  <tbody>
+  {% for p in future %}
+  <tr>
+    <td>{{ p.first_name }} {{ p.last_name }}</td>
+    <td>{{ p.position }}</td>
+    <td>{{ p.age }}</td>
+    <td>{{ p.draft_year }}</td>
+    <td><span class="grade">{{ p.scout_grade }}</span></td>
+    <td>{{ p.overall }}</td>
+    <td>{{ p.current_team }}<br><small>{{ p.current_league }}</small></td>
+    <td>{{ p.nationality[:3]|upper }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}

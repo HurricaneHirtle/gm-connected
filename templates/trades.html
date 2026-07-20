@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Trades{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Trade Center</h1></div>
+
+<div class="trade-grid">
+
+  <!-- Propose a Trade -->
+  <div class="card card-wide">
+    <h2>Propose a Trade</h2>
+    <form method="POST" action="{{ url_for('propose_trade') }}" id="trade-form">
+      <div class="trade-form-row">
+        <div class="trade-side">
+          <h3>You give</h3>
+          <select id="their-team-select" name="receiving_team_id" required onchange="loadTheirAssets(this.value)">
+            <option value="">— Select partner —</option>
+            {% for t in teams %}
+            {% if t.id != team.id %}
+            <option value="{{ t.id }}">{{ t.name }}</option>
+            {% endif %}
+            {% endfor %}
+          </select>
+
+          <h4>Your players</h4>
+          <div id="my-players">
+            {% for p in team.players %}
+            {% if p.nhl_roster %}
+            <label class="asset-check">
+              <input type="checkbox" name="my_players" value="{{ p.id }}">
+              {{ p.first_name }} {{ p.last_name }} ({{ p.position }} OVR {{ p.overall }} ${{ "{:,.0f}".format(p.cap_hit) }})
+            </label>
+            {% endif %}
+            {% endfor %}
+          </div>
+
+          <h4>Your picks</h4>
+          <div id="my-picks">
+            {% for pk in team.picks %}
+            {% if not pk.used %}
+            <label class="asset-check">
+              <input type="checkbox" name="my_picks" value="{{ pk.id }}">
+              {{ pk.label }}
+            </label>
+            {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="trade-arrow">⇄</div>
+
+        <div class="trade-side">
+          <h3>You receive</h3>
+          <div id="their-players"><p class="muted">Select a team first.</p></div>
+          <div id="their-picks"></div>
+        </div>
+      </div>
+
+      <label>Message (optional)
+        <textarea name="message" rows="2" style="width:100%"></textarea>
+      </label>
+      <button type="submit" class="btn btn-primary">Send Proposal</button>
+    </form>
+  </div>
+
+  <!-- Incoming -->
+  <div class="card">
+    <h2>Incoming Offers ({{ incoming|length }})</h2>
+    {% for t in incoming %}
+    <div class="trade-card status-{{ t.status }}">
+      <strong>From {{ t.proposing_team.name }}</strong>
+      <span class="badge badge-{{ t.status }}">{{ t.status }}</span>
+      <p>{{ t.message or "No message." }}</p>
+      <ul>
+        {% for a in t.assets %}
+        <li>
+          {% if a.asset_type == "player" and a.player %}
+            {{ "→" if a.to_team_id == team.id else "←" }}
+            {{ a.player.first_name }} {{ a.player.last_name }} ({{ a.player.position }})
+          {% elif a.asset_type == "pick" and a.pick %}
+            {{ "→" if a.to_team_id == team.id else "←" }}
+            {{ a.pick.label }}
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% if t.status == "pending" %}
+      <form method="POST" action="{{ url_for('respond_trade', trade_id=t.id) }}" class="inline-form">
+        <button name="action" value="accept" class="btn btn-sm btn-primary">Accept</button>
+        <button name="action" value="reject" class="btn btn-sm btn-danger">Reject</button>
+      </form>
+      {% endif %}
+    </div>
+    {% else %}
+    <p class="muted">No incoming offers.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Outgoing -->
+  <div class="card">
+    <h2>Outgoing Offers ({{ outgoing|length }})</h2>
+    {% for t in outgoing %}
+    <div class="trade-card status-{{ t.status }}">
+      <strong>To {{ t.receiving_team.name }}</strong>
+      <span class="badge badge-{{ t.status }}">{{ t.status }}</span>
+      <p>{{ t.message or "No message." }}</p>
+    </div>
+    {% else %}
+    <p class="muted">No outgoing offers.</p>
+    {% endfor %}
+  </div>
+
+</div>
+
+<script>
+function loadTheirAssets(teamId) {
+  if (!teamId) return;
+  fetch(`/api/team/${teamId}/players`)
+    .then(r => r.json())
+    .then(players => {
+      const div = document.getElementById('their-players');
+      div.innerHTML = players.map(p =>
+        `<label class="asset-check">
+           <input type="checkbox" name="their_players" value="${p.id}">
+           ${p.name} (${p.pos} OVR ${p.ovr} $${p.cap_hit.toLocaleString()})
+         </label>`
+      ).join('') || '<p class="muted">No players.</p>';
+    });
+  fetch(`/api/team/${teamId}/picks`)
+    .then(r => r.json())
+    .then(picks => {
+      const div = document.getElementById('their-picks');
+      div.innerHTML = `<h4>Their picks</h4>` + picks.map(pk =>
+        `<label class="asset-check">
+           <input type="checkbox" name="their_picks" value="${pk.id}">
+           ${pk.label}
+         </label>`
+      ).join('') || '<p class="muted">No picks.</p>';
+    });
+}
+</script>
+{% endblock %}

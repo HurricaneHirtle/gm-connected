@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Standings{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Standings — {{ season.year }}-{{ (season.year+1)|string|slice(2) }}</h1>
+</div>
+
+{% for (conf, div), rows in grouped.items() %}
+{% if loop.first or (loop.previtem[0][0] != conf) %}
+<h2>{{ conf }}ern Conference</h2>
+{% endif %}
+<h3>{{ div }} Division</h3>
+<table class="data-table standings-table">
+  <thead>
+    <tr><th>Team</th><th>GP</th><th>W</th><th>L</th><th>OTL</th><th>PTS</th><th>GF</th><th>GA</th><th>DIFF</th></tr>
+  </thead>
+  <tbody>
+  {% for s in rows %}
+  <tr class="{{ 'highlight' if s.team_id == current_user.team_id }}">
+    <td><a href="{{ url_for('roster', team_id=s.team_id) }}">{{ s.team.city }} {{ s.team.name }}</a></td>
+    <td>{{ s.gp }}</td>
+    <td>{{ s.w }}</td>
+    <td>{{ s.l }}</td>
+    <td>{{ s.otl }}</td>
+    <td><strong>{{ s.pts }}</strong></td>
+    <td>{{ s.gf }}</td>
+    <td>{{ s.ga }}</td>
+    <td>{{ "%+d"|format(s.gf - s.ga) }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endfor %}
+{% endblock %}

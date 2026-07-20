@@ -1,0 +1,171 @@
+/* ── Reset & Base ───────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px;
+       background: #0d1117; color: #e6edf3; min-height: 100vh; }
+a { color: #58a6ff; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Navbar ─────────────────────────────────────────────────────────────── */
+.navbar {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #161b22; border-bottom: 1px solid #30363d;
+  padding: 0 1.5rem; height: 52px; position: sticky; top: 0; z-index: 100;
+}
+.nav-brand { font-size: 1.1rem; font-weight: 700; color: #e6edf3; }
+.nav-links { display: flex; gap: 1rem; }
+.nav-links a { color: #8b949e; font-size: 0.9rem; padding: 0.25rem 0; }
+.nav-links a:hover { color: #e6edf3; text-decoration: none; }
+
+/* ── Main ───────────────────────────────────────────────────────────────── */
+.main-content { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+
+/* ── Flash Messages ─────────────────────────────────────────────────────── */
+.flash-container { margin-bottom: 1rem; }
+.flash { padding: 0.6rem 1rem; border-radius: 6px; margin-bottom: 0.5rem; font-size: 0.9rem; }
+.flash-success { background: #1f3d27; border: 1px solid #2ea043; color: #56d364; }
+.flash-error   { background: #3d1f1f; border: 1px solid #f85149; color: #ff7b72; }
+.flash-info    { background: #1f2d3d; border: 1px solid #388bfd; color: #79c0ff; }
+.flash-warning { background: #3d2f1f; border: 1px solid #d29922; color: #e3b341; }
+
+/* ── Page Header ────────────────────────────────────────────────────────── */
+.page-header { margin-bottom: 1.5rem; }
+.page-header h1 { font-size: 1.5rem; font-weight: 600; }
+.page-header p { color: #8b949e; margin-top: 0.25rem; }
+.season-badge { color: #8b949e; font-size: 0.9rem; margin-top: 0.25rem; }
+
+/* ── Cards ──────────────────────────────────────────────────────────────── */
+.card {
+  background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+  padding: 1.25rem;
+}
+.card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem;
+           border-bottom: 1px solid #30363d; padding-bottom: 0.5rem; }
+.card-wide { grid-column: span 2; }
+
+.dashboard-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+.trade-grid     { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.draft-grid     { display: grid; grid-template-columns: 220px 1fr; gap: 1rem; }
+
+/* ── Tables ─────────────────────────────────────────────────────────────── */
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.data-table th {
+  background: #1f2937; color: #8b949e; font-weight: 600; text-align: left;
+  padding: 0.4rem 0.6rem; border-bottom: 1px solid #30363d; white-space: nowrap;
+}
+.data-table td { padding: 0.35rem 0.6rem; border-bottom: 1px solid #1c2128; }
+.data-table tr:hover td { background: #1c2128; }
+.data-table tr.win  td { background: #1a2e1a; }
+.data-table tr.loss td { background: #2e1a1a; }
+.data-table tr.highlight td { background: #1c2535; }
+.score { text-align: center; font-weight: 700; }
+.score-cell { text-align: center; font-weight: 700; width: 32px; }
+.center { text-align: center; }
+.muted  { color: #6e7681; }
+
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+.btn { display: inline-block; padding: 0.4rem 0.9rem; border-radius: 6px;
+       font-size: 0.85rem; font-weight: 500; cursor: pointer; border: 1px solid transparent;
+       transition: background 0.15s; }
+.btn-primary  { background: #1f6feb; color: #fff; border-color: #388bfd; }
+.btn-primary:hover { background: #388bfd; }
+.btn-danger   { background: #6e1921; color: #fff; border-color: #f85149; }
+.btn-danger:hover { background: #8b1c23; }
+.btn-sm { padding: 0.25rem 0.6rem; font-size: 0.78rem; }
+button.btn { font-family: inherit; }
+
+/* ── Forms ──────────────────────────────────────────────────────────────── */
+label { display: block; margin-bottom: 0.75rem; color: #8b949e; font-size: 0.85rem; }
+label input, label select, label textarea {
+  display: block; width: 100%; margin-top: 0.2rem;
+  background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
+  color: #e6edf3; padding: 0.45rem 0.7rem; font-size: 0.9rem;
+}
+label input:focus, label select:focus {
+  outline: none; border-color: #388bfd; box-shadow: 0 0 0 3px rgba(56,139,253,0.15);
+}
+.inline-form { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.inline-form label { margin-bottom: 0; }
+
+/* ── Auth Box ───────────────────────────────────────────────────────────── */
+.auth-box {
+  max-width: 400px; margin: 5rem auto;
+  background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+  padding: 2rem; text-align: center;
+}
+.auth-box h1 { font-size: 2rem; margin-bottom: 0.25rem; }
+.auth-box h2 { font-size: 1.1rem; color: #8b949e; margin-bottom: 1.5rem; }
+.auth-box label { text-align: left; }
+.auth-box .btn { width: 100%; margin-top: 0.5rem; padding: 0.6rem; }
+.auth-box p { margin-top: 1rem; color: #8b949e; font-size: 0.85rem; }
+
+/* ── Cap Bar ────────────────────────────────────────────────────────────── */
+.cap-bar-wrap { background: #1c2128; border-radius: 4px; height: 8px; margin-bottom: 0.5rem; overflow: hidden; }
+.cap-bar { height: 8px; background: linear-gradient(90deg, #238636, #2ea043); border-radius: 4px; transition: width 0.5s; }
+.cap-numbers { font-size: 0.85rem; }
+.cap-ceiling { color: #6e7681; font-size: 0.8rem; margin-left: 0.5rem; }
+
+/* ── Phase Badge ────────────────────────────────────────────────────────── */
+.phase-badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 10px;
+               font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+.phase-preseason { background: #1f2937; color: #8b949e; }
+.phase-regular   { background: #1a3a5c; color: #79c0ff; }
+.phase-playoffs  { background: #3d2e00; color: #e3b341; }
+.phase-draft     { background: #1f3d27; color: #56d364; }
+.phase-offseason { background: #2e1f3d; color: #d2a8ff; }
+
+/* ── Trade ──────────────────────────────────────────────────────────────── */
+.trade-form-row { display: flex; gap: 1.5rem; margin-bottom: 1rem; align-items: flex-start; }
+.trade-side { flex: 1; }
+.trade-arrow { font-size: 2rem; padding-top: 2.5rem; color: #6e7681; }
+.asset-check { display: flex; align-items: baseline; gap: 0.4rem; margin-bottom: 0.25rem;
+               color: #e6edf3; font-size: 0.85rem; }
+.asset-check input { width: auto; display: inline; margin: 0; }
+.trade-card { background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
+              padding: 0.75rem; margin-bottom: 0.75rem; }
+.trade-card ul { margin: 0.5rem 0 0.5rem 1rem; font-size: 0.85rem; }
+.status-pending  { border-left: 3px solid #d29922; }
+.status-accepted { border-left: 3px solid #2ea043; }
+.status-rejected { border-left: 3px solid #f85149; }
+.trade-alert { background: #1f2d3d; border: 1px solid #388bfd; border-radius: 6px;
+               padding: 0.5rem 0.75rem; margin-bottom: 0.5rem;
+               display: flex; align-items: center; justify-content: space-between; }
+
+/* ── Badges ─────────────────────────────────────────────────────────────── */
+.badge { display: inline-block; padding: 0.1rem 0.45rem; border-radius: 10px;
+         font-size: 0.72rem; font-weight: 600; text-transform: uppercase; }
+.badge-pending  { background: #3d2e00; color: #e3b341; }
+.badge-accepted { background: #1f3d27; color: #56d364; }
+.badge-rejected { background: #3d1f1f; color: #f85149; }
+
+/* ── Scout Grade ────────────────────────────────────────────────────────── */
+.grade { display: inline-block; padding: 0.1rem 0.45rem; border-radius: 10px;
+         font-weight: 700; font-size: 0.8rem; background: #1f2937; color: #e6edf3; }
+.grade-Aplus  { background: #5a1e75; color: #d2a8ff; }
+.grade-A      { background: #3d1f75; color: #d2a8ff; }
+.grade-Aminus { background: #2e1a5c; color: #79c0ff; }
+.grade-Bplus  { background: #1a3a5c; color: #79c0ff; }
+.grade-B      { background: #1f3d27; color: #56d364; }
+.grade-Bminus { background: #1a2e1a; color: #3fb950; }
+.grade-Cplus  { background: #3d2e00; color: #e3b341; }
+.grade-C      { background: #2e2200; color: #d29922; }
+.grade-Cminus { background: #3d1f00; color: #f0883e; }
+.grade-D      { background: #3d1f1f; color: #f85149; }
+
+/* ── Ready Status ───────────────────────────────────────────────────────── */
+.ready-status { font-size: 0.95rem; margin-bottom: 0.75rem; }
+.ready     { color: #56d364; }
+.not-ready { color: #e3b341; }
+
+/* ── Picks ──────────────────────────────────────────────────────────────── */
+.pick-list { list-style: none; }
+.pick-list li { padding: 0.3rem 0; border-bottom: 1px solid #1c2128; font-size: 0.85rem; }
+
+/* ── Week Nav ───────────────────────────────────────────────────────────── */
+.week-nav { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+
+/* ── Year Tabs ──────────────────────────────────────────────────────────── */
+.year-tabs { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+
+/* ── Draft ──────────────────────────────────────────────────────────────── */
+.draft-selectors { display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1rem; }
+.draft-selectors label { min-width: 280px; }

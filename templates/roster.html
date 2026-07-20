@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}{{ team.name }} Roster{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>{{ team.city }} {{ team.name }} — Roster</h1>
+  <p>Cap hit: <strong>${{ "{:,.0f}".format(team.cap_hit) }}</strong> &nbsp;|&nbsp;
+     Space: <strong>${{ "{:,.0f}".format(team.cap_space) }}</strong> &nbsp;|&nbsp;
+     OVR: <strong>{{ team.overall }}</strong></p>
+</div>
+
+{% macro player_table(section_label, player_list) %}
+{% if player_list %}
+<h2>{{ section_label }}</h2>
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Name</th><th>Pos</th><th>Age</th><th>OVR</th>
+      <th>SKT</th><th>SHT</th><th>PAS</th><th>DEF</th><th>PHY</th><th>PKC</th><th>AWR</th>
+      <th>Cap Hit</th><th>Yrs</th><th>Type</th>
+      {% if is_own %}<th>Action</th>{% endif %}
+    </tr>
+  </thead>
+  <tbody>
+  {% for p in player_list %}
+  <tr>
+    <td>{{ p.first_name }} {{ p.last_name }}{% if p.injured %} 🤕{% endif %}</td>
+    <td>{{ p.position }}</td>
+    <td>{{ p.age }}</td>
+    <td><strong>{{ p.overall }}</strong></td>
+    {% if p.position == "G" %}
+    <td colspan="7" class="muted center">REF {{ p.reflexes }} / POS {{ p.positioning }} / RBC {{ p.rebound_ctrl }} / PKH {{ p.puck_handling }}</td>
+    {% else %}
+    <td>{{ p.skating }}</td><td>{{ p.shooting }}</td><td>{{ p.passing }}</td>
+    <td>{{ p.defense }}</td><td>{{ p.physical }}</td><td>{{ p.puck_control }}</td>
+    <td>{{ p.awareness }}</td>
+    {% endif %}
+    <td>${{ "{:,.0f}".format(p.cap_hit) }}</td>
+    <td>{{ p.years_left }}</td>
+    <td>{{ p.contract_type }}</td>
+    {% if is_own %}
+    <td>
+      <form method="POST" action="{{ url_for('release_player', player_id=p.id) }}"
+            onsubmit="return confirm('Release {{ p.first_name }} {{ p.last_name }}?')">
+        <button type="submit" class="btn btn-sm btn-danger">Release</button>
+      </form>
+    </td>
+    {% endif %}
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endmacro %}
+
+{% set forwards  = players|selectattr("position","in",["C","LW","RW"])|selectattr("nhl_roster")|list %}
+{% set defenders = players|selectattr("position","equalto","D")|selectattr("nhl_roster")|list %}
+{% set goalies   = players|selectattr("position","equalto","G")|selectattr("nhl_roster")|list %}
+{% set minors    = players|rejectattr("nhl_roster")|list %}
+
+{{ player_table("Forwards", forwards) }}
+{{ player_table("Defensemen", defenders) }}
+{{ player_table("Goalies", goalies) }}
+{{ player_table("Minors / Scratches", minors) }}
+{% endblock %}

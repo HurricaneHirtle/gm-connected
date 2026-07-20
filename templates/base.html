@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}GM Connected{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+{% if current_user.is_authenticated %}
+<nav class="navbar">
+  <a class="nav-brand" href="{{ url_for('dashboard') }}">🏒 GM Connected</a>
+  <div class="nav-links">
+    <a href="{{ url_for('dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('roster') }}">Roster</a>
+    <a href="{{ url_for('free_agency') }}">Free Agency</a>
+    <a href="{{ url_for('trades') }}">Trades</a>
+    <a href="{{ url_for('standings') }}">Standings</a>
+    <a href="{{ url_for('schedule') }}">Schedule</a>
+    <a href="{{ url_for('prospects') }}">Prospects</a>
+    <a href="{{ url_for('draft') }}">Draft</a>
+    {% if current_user.is_commissioner %}
+    <a href="{{ url_for('admin') }}">⚙ Admin</a>
+    {% endif %}
+    <a href="{{ url_for('logout') }}">Logout</a>
+  </div>
+</nav>
+{% endif %}
+
+<main class="main-content">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-container">
+        {% for cat, msg in messages %}
+          <div class="flash flash-{{ cat }}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</main>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
