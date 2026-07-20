@@ -40,7 +40,6 @@ def current_season():
 
 
 def require_commissioner(f):
-    """Decorator: 403 unless user is commissioner."""
     from functools import wraps
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -84,7 +83,7 @@ def register():
         if User.query.filter_by(username=username).first():
             flash("Username already taken.", "error")
             return redirect(url_for("register"))
-        is_first = User.query.count() == 0  # first user becomes commissioner
+        is_first = User.query.count() == 0
         user = User(username=username, team_id=team_id, is_commissioner=is_first)
         user.set_password(password)
         db.session.add(user)
@@ -105,15 +104,11 @@ def register():
 def dashboard():
     season = current_season()
     team   = Team.query.get(current_user.team_id) if current_user.team_id else None
-
-    # Readiness status
     readiness = None
     if season and team:
         readiness = WeeklyReadiness.query.filter_by(
             season_id=season.id, week=season.week, team_id=team.id
         ).first()
-
-    # Recent games
     recent_games = []
     if team and season:
         recent_games = (
@@ -127,14 +122,11 @@ def dashboard():
             .limit(5)
             .all()
         )
-
-    # Pending trades
     pending_trades = []
     if team:
         pending_trades = Trade.query.filter_by(
             receiving_team_id=team.id, status="pending"
         ).all()
-
     return render_template("dashboard.html",
         season=season, team=team, readiness=readiness,
         recent_games=recent_games, pending_trades=pending_trades)
@@ -180,22 +172,17 @@ def sign_player(player_id):
     player = Player.query.get_or_404(player_id)
     team   = Team.query.get_or_404(current_user.team_id)
     season = current_season()
-
     if player.team_id is not None:
         flash("Player is no longer available.", "error")
         return redirect(url_for("free_agency"))
-
-    cap_hit   = request.form.get("cap_hit",   type=int)
+    cap_hit    = request.form.get("cap_hit",    type=int)
     years_left = request.form.get("years_left", type=int, default=1)
-
     if cap_hit is None or cap_hit < 750_000:
         flash("Invalid contract value.", "error")
         return redirect(url_for("free_agency"))
-
     if team.cap_space < cap_hit:
         flash(f"Not enough cap space. You have ${team.cap_space:,.0f} available.", "error")
         return redirect(url_for("free_agency"))
-
     player.team_id    = team.id
     player.cap_hit    = cap_hit
     player.years_left = years_left
@@ -224,8 +211,8 @@ def release_player(player_id):
 @app.route("/trades")
 @login_required
 def trades():
-    season = current_season()
-    team   = Team.query.get(current_user.team_id)
+    season   = current_season()
+    team     = Team.query.get(current_user.team_id)
     incoming = Trade.query.filter_by(receiving_team_id=team.id).order_by(Trade.created_at.desc()).all()
     outgoing = Trade.query.filter_by(proposing_team_id=team.id).order_by(Trade.created_at.desc()).all()
     teams    = Team.query.order_by(Team.name).all()
@@ -236,24 +223,20 @@ def trades():
 @app.route("/trades/propose", methods=["POST"])
 @login_required
 def propose_trade():
-    season      = current_season()
-    my_team_id  = current_user.team_id
-    other_id    = request.form.get("receiving_team_id", type=int)
-    message     = request.form.get("message", "")
-
-    my_player_ids   = request.form.getlist("my_players",   type=int)
-    my_pick_ids     = request.form.getlist("my_picks",     type=int)
-    their_player_ids= request.form.getlist("their_players",type=int)
-    their_pick_ids  = request.form.getlist("their_picks",  type=int)
-
+    season           = current_season()
+    my_team_id       = current_user.team_id
+    other_id         = request.form.get("receiving_team_id", type=int)
+    message          = request.form.get("message", "")
+    my_player_ids    = request.form.getlist("my_players",    type=int)
+    my_pick_ids      = request.form.getlist("my_picks",      type=int)
+    their_player_ids = request.form.getlist("their_players", type=int)
+    their_pick_ids   = request.form.getlist("their_picks",   type=int)
     if not other_id or other_id == my_team_id:
         flash("Invalid trade partner.", "error")
         return redirect(url_for("trades"))
-
     if not (my_player_ids or my_pick_ids or their_player_ids or their_pick_ids):
         flash("A trade must include at least one asset.", "error")
         return redirect(url_for("trades"))
-
     trade = Trade(
         season_id=season.id,
         proposing_team_id=my_team_id,
@@ -264,20 +247,18 @@ def propose_trade():
     )
     db.session.add(trade)
     db.session.flush()
-
-    for pid in my_player_ids:
+    for pid  in my_player_ids:
         db.session.add(TradeAsset(trade_id=trade.id, from_team_id=my_team_id,
                                    to_team_id=other_id, asset_type="player", player_id=pid))
     for pkid in my_pick_ids:
         db.session.add(TradeAsset(trade_id=trade.id, from_team_id=my_team_id,
                                    to_team_id=other_id, asset_type="pick", pick_id=pkid))
-    for pid in their_player_ids:
+    for pid  in their_player_ids:
         db.session.add(TradeAsset(trade_id=trade.id, from_team_id=other_id,
                                    to_team_id=my_team_id, asset_type="player", player_id=pid))
     for pkid in their_pick_ids:
         db.session.add(TradeAsset(trade_id=trade.id, from_team_id=other_id,
                                    to_team_id=my_team_id, asset_type="pick", pick_id=pkid))
-
     db.session.commit()
     flash("Trade proposal sent!", "success")
     return redirect(url_for("trades"))
@@ -288,13 +269,11 @@ def propose_trade():
 def respond_trade(trade_id):
     trade  = Trade.query.get_or_404(trade_id)
     action = request.form.get("action")
-
     if trade.receiving_team_id != current_user.team_id:
         abort(403)
     if trade.status != "pending":
         flash("This trade is no longer pending.", "error")
         return redirect(url_for("trades"))
-
     if action == "accept":
         _execute_trade(trade)
         trade.status = "accepted"
@@ -304,14 +283,12 @@ def respond_trade(trade_id):
         flash("Trade rejected.", "info")
     else:
         flash("Unknown action.", "error")
-
     trade.resolved_at = datetime.now(timezone.utc)
     db.session.commit()
     return redirect(url_for("trades"))
 
 
 def _execute_trade(trade):
-    """Move players and picks between teams."""
     for asset in trade.assets:
         if asset.asset_type == "player":
             p = Player.query.get(asset.player_id)
@@ -337,7 +314,6 @@ def standings():
         .order_by(Team.conference, Team.division, Standing.pts.desc())
         .all()
     )
-    # Group by conference and division
     grouped = {}
     for s in rows:
         key = (s.team.conference, s.team.division)
@@ -412,27 +388,22 @@ def make_pick():
     prospect_id = request.form.get("prospect_id", type=int)
     pick_id     = request.form.get("pick_id",     type=int)
     season      = current_season()
-
     if season and season.phase != "draft":
         flash("Draft is not open.", "error")
         return redirect(url_for("draft"))
-
-    pick    = DraftPick.query.get_or_404(pick_id)
-    prospect= Prospect.query.get_or_404(prospect_id)
-
+    pick     = DraftPick.query.get_or_404(pick_id)
+    prospect = Prospect.query.get_or_404(prospect_id)
     if pick.owner_team_id != current_user.team_id:
         abort(403)
     if pick.used or prospect.is_drafted:
         flash("That pick or prospect is no longer available.", "error")
         return redirect(url_for("draft"))
-
     pick.used               = True
     pick.pick_number        = pick.pick_number or 0
     prospect.is_drafted     = True
     prospect.nhl_team_id    = current_user.team_id
     prospect.draft_round    = pick.round
     prospect.draft_pick_num = pick.pick_number
-
     db.session.commit()
     flash(f"Drafted {prospect.first_name} {prospect.last_name}!", "success")
     return redirect(url_for("draft"))
@@ -449,21 +420,17 @@ def ready_up():
     if not season or not team:
         flash("No active season.", "error")
         return redirect(url_for("dashboard"))
-
     existing = WeeklyReadiness.query.filter_by(
         season_id=season.id, week=season.week, team_id=team.id
     ).first()
     if existing:
         flash("Already readied up this week.", "info")
         return redirect(url_for("dashboard"))
-
     wr = WeeklyReadiness(season_id=season.id, week=season.week,
                           team_id=team.id, is_ready=True,
                           readied_at=datetime.now(timezone.utc))
     db.session.add(wr)
     db.session.commit()
-
-    # Check if all active GMs are ready
     active_team_ids = {u.team_id for u in User.query.filter(User.team_id.isnot(None)).all()}
     ready_ids = {
         r.team_id for r in
@@ -475,17 +442,12 @@ def ready_up():
     else:
         remaining = len(active_team_ids - ready_ids)
         flash(f"Readied up! Waiting on {remaining} more GM(s).", "success")
-
     return redirect(url_for("dashboard"))
 
 
 def _advance_week_auto(season):
     from sim_engine import advance_week
-    from prospect_gen import generate_cohort, develop_prospect
-
     advance_week(db, season)
-
-    # End of regular season → switch to playoffs/draft
     if season.week > 26 and season.phase == "regular":
         season.phase = "playoffs"
     elif season.week > 30 and season.phase == "playoffs":
@@ -493,18 +455,13 @@ def _advance_week_auto(season):
     elif season.week > 32 and season.phase == "draft":
         season.phase = "offseason"
         _run_offseason(season)
-
     db.session.commit()
 
 
 def _run_offseason(season):
-    """Age all prospects, generate new 14-year-old cohort for next year."""
     from prospect_gen import develop_prospect, generate_cohort
-    from models import Prospect
-
-    # Age existing prospects
     for p in Prospect.query.filter_by(is_drafted=False).all():
-        data = {c.name: getattr(p, c.name) for c in p.__table__.columns}
+        data    = {c.name: getattr(p, c.name) for c in p.__table__.columns}
         updated = develop_prospect(data, seasons=1)
         for attr, val in updated.items():
             if hasattr(p, attr) and attr not in ("id",):
@@ -512,8 +469,6 @@ def _run_offseason(season):
                     setattr(p, attr, val)
                 except Exception:
                     pass
-
-    # New 14-year-old class for next season
     new_cohort = generate_cohort(season.year + 1, count_per_age={14: 30})
     for p_data in new_cohort:
         p = Prospect(
@@ -530,8 +485,6 @@ def _run_offseason(season):
             ]},
         )
         db.session.add(p)
-
-    # Roll season year forward
     new_season = Season(year=season.year + 1, week=1, phase="preseason",
                         cap_ceiling=season.cap_ceiling + 1_000_000)
     db.session.add(new_season)
@@ -544,13 +497,11 @@ def _run_offseason(season):
 @login_required
 @require_commissioner
 def admin():
-    season = current_season()
-    teams  = Team.query.order_by(Team.name).all()
-    users  = User.query.all()
+    season    = current_season()
+    teams     = Team.query.order_by(Team.name).all()
+    users     = User.query.all()
     readiness = (
-        WeeklyReadiness.query
-        .filter_by(season_id=season.id, week=season.week)
-        .all()
+        WeeklyReadiness.query.filter_by(season_id=season.id, week=season.week).all()
     ) if season else []
     return render_template("admin.html", season=season, teams=teams,
                            users=users, readiness=readiness)
@@ -599,8 +550,7 @@ def api_team_players(team_id):
 @app.route("/api/team/<int:team_id>/picks")
 @login_required
 def api_team_picks(team_id):
-    season = current_season()
-    picks  = DraftPick.query.filter_by(owner_team_id=team_id, used=False).all()
+    picks = DraftPick.query.filter_by(owner_team_id=team_id, used=False).all()
     return jsonify([{
         "id": pk.id, "label": pk.label,
         "year": pk.year, "round": pk.round,
@@ -621,10 +571,30 @@ def api_standings():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Auto-initialize DB on startup (runs under gunicorn too)
+# ─────────────────────────────────────────────────────────────────────────────
+def _auto_init():
+    db.create_all()
+    if Team.query.count() == 0:
+        from init_db import (seed_teams, seed_season, seed_draft_picks,
+                             seed_prospects, seed_placeholder_players, seed_standings)
+        print("Seeding database for first time...")
+        teams  = seed_teams()
+        season = seed_season()
+        seed_draft_picks(teams, season)
+        seed_prospects(season)
+        seed_placeholder_players(teams)
+        seed_standings(teams, season)
+        db.session.commit()
+        print(f"Seeded {len(teams)} teams + prospects.")
+
+with app.app_context():
+    _auto_init()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Run
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=True, host="0.0.0.0", port=port)
